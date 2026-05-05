@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Эльгария — Тёмное Время</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0b0a0f;
+            background-image: radial-gradient(circle at 30% 10%, #1f1b2c, #0b0a0f);
+            min-height: 100vh;
+            font-family: 'Philosopher', serif;
+            color: #e0d6c2;
+            padding: 20px 20px 50px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .particles {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: #c9a84c;
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatUp 8s infinite;
+            box-shadow: 0 0 8px #c9a84c, 0 0 15px #c9a84c80;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            10% { opacity: 0.8; }
+            30% { transform: translateY(70vh) translateX(20px) scale(1); opacity: 0.6; }
+            60% { transform: translateY(30vh) translateX(-20px) scale(0.8); opacity: 0.4; }
+            100% { transform: translateY(-10vh) scale(0.2); opacity: 0; }
+        }
+        .fog {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 80%, rgba(201, 168, 76, 0.05) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            flex-wrap: nowrap;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+        .main-tab {
+            background: #1a1426;
+            color: #8b7b6b;
+            border: 1px solid #5e4a3c;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .main-tab.active {
+            background: #2a1f3a;
+            color: #c9a84c;
+            border-color: #c9a84c;
+            box-shadow: 0 0 10px #c9a84c40;
+            transform: scale(1.02);
+        }
+
+        .panel {
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .panel.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            height: auto;
+            overflow: visible;
+        }
+
+        .gen-title {
+            font-size: 2.2rem; color: #c9a84c;
+            text-shadow: 0 0 15px #c9a84c80;
+            letter-spacing: 3px; margin-bottom: 5px; text-align: center;
+        }
+        .gen-subtitle { color: #8b7b6b; font-style: italic; margin-bottom: 20px; text-align: center; }
+        .gen-btn {
+            background: linear-gradient(145deg, #1a1426, #2a1f3a);
+            color: #c9a84c; border: 1px solid #5e4a3c;
+            padding: 14px 35px; font-size: 1.2rem; font-weight: bold;
+            border-radius: 50px; cursor: pointer; letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), 0 0 15px #c9a84c40;
+            transition: all 0.25s ease; margin-bottom: 25px;
+            font-family: 'Philosopher', sans-serif;
+        }
+        .gen-btn:hover { background: #2d2342; border-color: #c9a84c; box-shadow: 0 5px 25px #c9a84c70; }
+        .card {
+            background: rgba(18, 15, 26, 0.9); backdrop-filter: blur(12px);
+            border: 1px solid #5e4a3c; border-radius: 25px; padding: 25px 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.7), inset 0 0 30px #c9a84c10;
+            text-align: left; opacity: 0; transform: scale(0.95);
+            transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none;
+        }
+        .card.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .field { margin-bottom: 16px; border-bottom: 1px dashed #3a2f2a; padding-bottom: 10px; }
+        .field:last-of-type { border-bottom: none; }
+        .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #8b7b6b; margin-bottom: 4px; }
+        .value { font-size: 1.1rem; color: #e0d6c2; line-height: 1.4; }
+
+        .ref-title {
+            color: #c9a84c;
+            text-shadow: 0 0 10px #c9a84c80;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        .ref-subtitle { color: #8b7b6b; font-style: italic; margin-bottom: 15px; text-align: center; font-size: 0.8rem; }
+        .section-tabs {
+            display: flex; justify-content: center; gap: 12px; margin-bottom: 15px;
+        }
+        .section-tab {
+            background: #1a1426; color: #8b7b6b;
+            border: 1px solid #5e4a3c; padding: 6px 16px;
+            border-radius: 20px; cursor: pointer;
+            font-family: inherit; font-size: 0.8rem; transition: all 0.25s ease;
+        }
+        .section-tab.active {
+            background: #2a1f3a; color: #c9a84c;
+            border-color: #c9a84c; box-shadow: 0 0 8px #c9a84c40;
+        }
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 20px; }
+        .tab {
+            background: #1a1426; color: #8b7b6b;
+            border: 1px solid #5e4a3c; padding: 5px 10px;
+            border-radius: 14px; cursor: pointer;
+            font-family: inherit; font-size: 0.7rem; transition: all 0.25s ease;
+        }
+        .tab.active {
+            background: #2a1f3a; color: #c9a84c;
+            border-color: #c9a84c; box-shadow: 0 0 6px #c9a84c40;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px; width: 100%;
+        }
+        .ref-card {
+            background: rgba(18, 15, 26, 0.8); border: 1px solid #5e4a3c;
+            border-radius: 14px; padding: 12px 6px; text-align: center;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+        .ref-card:hover, .ref-card:active {
+            border-color: #c9a84c; box-shadow: 0 0 12px #c9a84c40;
+            background: #1f1b2c;
+        }
+        .portrait {
+            width: 60px; height: 60px; border-radius: 50%;
+            margin: 0 auto 8px; background: #2a1f3a;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; line-height: 1; border: 2px solid #5e4a3c;
+            overflow: hidden;
+        }
+        .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .portrait span { font-size: 1.5rem; color: #c9a84c; }
+        .ref-name { font-size: 0.8rem; font-weight: bold; color: #c9a84c; margin-bottom: 3px; }
+        .ref-role { font-size: 0.65rem; color: #8b7b6b; }
+
+        .quest-panel { text-align: center; }
+        .quest-region-select {
+            margin-bottom: 20px;
+            background: #1a1426; color: #c9a84c;
+            border: 1px solid #5e4a3c;
+            padding: 8px 16px; border-radius: 20px;
+            font-family: inherit; font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .quest-list {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .quest-card {
+            background: rgba(18, 15, 26, 0.8);
+            border: 1px solid #5e4a3c;
+            border-radius: 14px; padding: 14px;
+            text-align: left;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .quest-card:hover { border-color: #c9a84c; box-shadow: 0 0 8px #c9a84c20; }
+        .quest-title { color: #c9a84c; font-size: 0.95rem; margin-bottom: 4px; }
+        .quest-desc { color: #e0d6c2; font-size: 0.8rem; margin-bottom: 4px; }
+        .quest-reward { color: #8b7b6b; font-size: 0.7rem; font-style: italic; }
+        .quest-location { color: #c9a84c; font-size: 0.7rem; margin-top: 4px; }
+
+        .modal-overlay {
+            display: none; position: fixed;
+            top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 100; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-overlay.open { display:flex; }
+        .modal {
+            background: #0f0c1a; border: 1px solid #c9a84c;
+            border-radius: 20px; max-width: 360px; width: 100%;
+            padding: 20px; position: relative;
+            box-shadow: 0 0 40px #000; animation: fadeScale 0.3s ease;
+        }
+        @keyframes fadeScale { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+        .modal .close {
+            position: absolute; top: 10px; right: 14px;
+            font-size: 1.8rem; color: #8b7b6b; cursor: pointer; transition: 0.3s;
+        }
+        .modal .close:hover { color: #c9a84c; }
+        .modal .portrait-large {
+            width: 90px; height: 90px; border-radius: 50%;
+            margin: 0 auto 12px; background: #2a1f3a;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; line-height: 1; border: 2px solid #c9a84c;
+            overflow: hidden;
+        }
+        .modal .portrait-large img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .modal .portrait-large span { font-size: 2.5rem; color: #c9a84c; }
+        .modal h2 { text-align: center; color: #c9a84c; margin-bottom: 5px; font-size: 1.2rem; }
+        .modal .subtitle { color: #8b7b6b; font-style: italic; margin-bottom: 12px; text-align: center; font-size: 0.85rem; }
+        .modal .description { font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; color: #e0d6c2; }
+
+        @media (max-width: 400px) {
+            .main-tab { padding: 6px 10px; font-size: 0.75rem; }
+            .gen-title { font-size: 1.8rem; }
+            .gen-subtitle { font-size: 0.8rem; }
+            .ref-title { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+<div class="fog"></div>
+
+<div class="main-tabs">
+    <div class="main-tab active" data-panel="generator">Персонаж</div>
+    <div class="main-tab" data-panel="reference">Власть и влияние</div>
+    <div class="main-tab" data-panel="quests">Задания</div>
+</div>
+
+<!-- Панель генератора -->
+<div class="panel active" id="generatorPanel">
+    <h1 class="gen-title">Эльгария</h1>
+    <div class="gen-subtitle">Тёмное Время · Генератор судеб</div>
+    <button class="gen-btn" onclick="generateCharacter()">Призвать персонажа</button>
+    <div class="card" id="characterCard">
+        <div class="field"><div class="label">ФИО</div><div class="value" id="fio"></div></div>
+        <div class="field"><div class="label">Происхождение</div><div class="value" id="origin"></div></div>
+        <div class="field"><div class="label">Народность</div><div class="value" id="race"></div></div>
+        <div class="field"><div class="label">Владение магией</div><div class="value" id="magic"></div></div>
+        <div class="field"><div class="label">Принадлежность</div><div class="value" id="affiliation"></div></div>
+        <div class="field"><div class="label">Умения</div><div class="value" id="skills"></div></div>
+        <div class="field"><div class="label">Характер</div><div class="value" id="character"></div></div>
+        <div class="field"><div class="label">Место появления</div><div class="value" id="spawnLocation"></div></div>
+    </div>
+</div>
+
+<!-- Панель справочника -->
+<div class="panel" id="referencePanel">
+    <h1 class="ref-title">Власть и Влияние</h1>
+    <div class="ref-subtitle">Действующие лица Эльгарии</div>
+    <div class="section-tabs" id="sectionTabBar">
+        <div class="section-tab active" data-section="empire">Империя</div>
+        <div class="section-tab" data-section="mordeyn">Мордейн</div>
+    </div>
+    <div class="tabs" id="tabBar"></div>
+    <div class="grid" id="cardGrid"></div>
+</div>
+
+<!-- Панель заданий -->
+<div class="panel" id="questsPanel">
+    <h1 class="gen-title">Задания</h1>
+    <div class="gen-subtitle">Выберите регион, чтобы увидеть доступные задания</div>
+    <div class="quest-panel">
+        <select class="quest-region-select" id="questRegionSelect">
+            <option value="">-- Выберите регион --</option>
+            <option value="aldemar">Столица Альдемар</option>
+            <option value="duga">Имперская Дуга</option>
+            <option value="hrebet">Драконий Хребет</option>
+            <option value="prostory">Мировые просторы</option>
+            <option value="wasteland">Пустоши Вейлара</option>
+        </select>
+        <div class="quest-list" id="questList"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <span class="close" id="closeModal">&times;</span>
+        <div class="portrait-large" id="modalPortrait"></div>
+        <h2 id="modalName"></h2>
+        <div class="subtitle" id="modalRole"></div>
+        <div class="description" id="modalDescription"></div>
+    </div>
+</div>
+
+<script>
+const mainTabs = document.querySelectorAll('.main-tab');
+const panels = {
+    generator: document.getElementById('generatorPanel'),
+    reference: document.getElementById('referencePanel'),
+    quests: document.getElementById('questsPanel')
+};
+
+mainTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const panelId = tab.dataset.panel;
+        for (let [key, panel] of Object.entries(panels)) {
+            panel.classList.toggle('active', key === panelId);
+        }
+    });
+});
+
+function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 10 + 's';
+        particle.style.animationDuration = 6 + Math.random() * 8 + 's';
+        container.appendChild(particle);
+    }
+}
+createParticles();
+
+// Генератор персонажа (без изменений)
+(function() {
+    const names = {
+        human: {
+            male: ["Аэтий","Марцелл","Луций","Корвус","Гелий","Тит","Септимий","Валериан","Октавиан","Максим","Флавий","Квинт","Децим","Люций","Аврелий","Гюнтер","Тельман","Осташ","Ролл","Акино","Така","Сай","Аттала","Арем","Ифи","Сейфич","Либе","Албро","Барап","Сетепо","Манмат","Себр"],
+            female: ["Валерия","Ливия","Альбина","Октавия","Корнелия","Юлия","Флавия","Лукреция","Аквилия","Сульпиция","Марция","Плавтия","Цецилия","Випсания","Лорейн","Наитти","Меари","Илеи","Фаврия","Инли","Ирис","Кетцила","Йими","Чурупа","Айретто","Кециль","Элон","Фань Еро"],
+            surnames: ["Альдарийский","Железный","Серебряный","Мудрый","Храбрый","Непокорный","Тихий","Тёмный","Светлый","Стальной","Золотой","Вечный","Ласепр","Манмат","Токина","Фераваль"]
+        },
+        elf: {
+            male: ["Аэллари","Тирандис","Иллитиан","Веландрис","Келебрим","Наэрис","Лориэн","Финелрод","Талланор","Эльронд","Варколь","Цафир","Грай","Неочу","Изаче","Адреш","Эноро","Вайтер","Хтони","Казнон","Палон","Кадораш","Несстрис","Елеон","Некриф","Гивриш","Монрек","Зур","Ферваль"],
+            female: ["Тиранда","Зильвана","Альдариэль","Ириэль","Лотиэль","Ниэль","Галадриэль","Ариэн","Линдир","Мираэль","Лорейн","Наитти","Вапрол","Цукен","Смить","Миморо","Меари","Илеи","Фаврия","Инли","Айретто","Сейфич","Тадон","Мэарику"],
+            surnames: ["Звездный Свет","Лунный Лист","Серебряный Ручей","Вечная Песнь","Тихий Ветер","Древний Лес","Хрустальный Взгляд","Фаджэву","Напапина","Ий-мий","Шншдл"]
+        },
+        orc: {
+            male: ["Груммаш","Мазг","Ургхал","Драгг","Крэш","Тарг","Ругнак","Горгол","Шарг","Бруз","Чми-Укен","Нри","Смить","Фаджэву","Моолик","Ташкана","Хэкох","Юфэ","Чазам","Монрек","Зур"],
+            female: ["Тхара","Ворка","Шара","Гашна","Урза","Мазга","Крига","Зорна","Рагна","Дугра","Напапина","Ий-мий","Чурупа","Какэто","Пажалин","Ташкана","Мэарику Токина"],
+            surnames: ["Кровавый Клык","Чёрный Топор","Ярость Горы","Железная Челюсть","Пламя Войны","Громовой Удар"]
+        },
+        dwarf: {
+            male: ["Торин","Двалин","Балин","Нори","Гимли","Трайн","Фарин","Дори","Оин","Глоин","Грай","Цукен","Вапрол","Смить","Изаче","Адреш","Барап","Албро","Себр","Ласепр"],
+            female: ["Дис","Фрея","Брин","Хельга","Сигрун","Гудрун","Тора","Вальда","Берта","Инга","Кециль","Меари","Фаврия","Ирис","Айретто","Йими"],
+            surnames: ["Каменный Молот","Железный Сапог","Золотая Борода","Глубокая Шахта","Гранитный Лоб","Тяжёлый Топор","Зур","Гивриш"]
+        },
+        fey: {
+            male: ["Лютиэн","Оберон","Пак","Робин","Финнеас","Бриз","Шепот","Туман","Листопад","Светляк","Варколь","Цафир","Грай","Неочу","Изаче","Адреш","Эноро","Вайтер","Хтони","Казнон","Палон","Кадораш","Несстрис","Елеон","Некриф","Гивриш","Монрек","Ферваль"],
+            female: ["Титания","Ариэль","Нимфа","Изель","Кора","Флора","Эхо","Мелодия","Росинка","Сильвана","Лорейн","Наитти","Вапрол","Цукен","Смить","Миморо","Меари","Илеи","Фаврия","Инли","Айретто","Сейфич","Тадон","Мэарику","Йими","Кетцила","Ирис","Чурупа"],
+            surnames: ["из Древнего Леса","Танцующий с Ветром","Сплетающий Сны","Дикая Песня","Лунная Тень","Шёпот Ручья","Фань Еро","Напапина","Ий-мий"]
+        },
+        other: {
+            first: ["Зар","Ксент","Морф","Никс","Тифон","Эрида","Хаос","Эреб","Нюкта","Гемера","Шншдл","Чми-Укен","Фаджэву","Кадораш","Несстрис","Чурупа","Какэто","Пажалин","Моолик","Ташкана","Хэкох","Юфэ","Некриф","Чазам","Тадон","Мэарику Токина","Ий-мий","Напапина","Гивриш","Зур","Ферваль"],
+            last: ["Бездны","Тысячи Лиц","Вечного Голода","Пустоты","Древней Крови","Забвения","Семи Огней","Мерцающих Надломов"]
+        }
+    };
+
+    const regions = ["Столица Альдемар","Имперская Дуга","Драконий Хребет","Мировые просторы","Пустоши Вейлара"];
+    const raceWeights = {
+        "Столица Альдемар": [45,3,0,5,3,5],
+        "Имперская Дуга": [50,4,0,6,4,4],
+        "Драконий Хребет": [25,5,20,20,10,5],
+        "Мировые просторы": [20,15,25,15,15,10],
+        "Пустоши Вейлара": [20,8,10,5,15,7]
+    };
+    const raceList = ["Люди","Эльфы","Орки","Гномы","Фейри","Другое"];
+    const raceKeys = ["human","elf","orc","dwarf","fey","other"];
+
+    const magicTypes = ["Отсутствует","Базовая","Школа магии","Магическая Академия","Запрещённая"];
+    const baseMagicWeights = [15,55,15,5,10];
+    const affiliationsList = ["Вольный","Наёмник","Великий дом","Магическая гильдия","Церковь","Культ","Купец"];
+    const baseAffiliationWeights = [25,20,5,5,10,10,15];
+    const skillPools = {
+        combat: ["Владение мечом","Тактика боя","Выживание в дикой местности","Меткость","Крепкая защита","Рукопашный бой"],
+        magic: ["Теория магии","Управление потоками маны","Артефакторика","Алхимия","Чтение древних текстов","Сотворение иллюзий"],
+        stealth: ["Скрытность","Отравление","Обман и маскировка","Взлом замков","Карманные кражи"],
+        social: ["Красноречие","Дипломатия","Запугивание","Знание этикета","Сбор слухов"],
+        wild: ["Охота","Следопытство","Укрощение зверей","Знание трав","Ориентирование по звёздам"],
+        divine: ["Исцеление","Благословение оружия","Изгнание нежити","Проповедь","Ритуалы очищения"],
+        forbidden: ["Демонология","Проклятия","Некромантия","Жертвоприношения","Тайные обряды"],
+        trade: ["Торговля","Оценка товаров","Бухгалтерия","Знание рынков","Переговоры","Контрабанда"]
+    };
+    const traits = ["Храбрый","Трусливый","Жестокий","Милосердный","Честный","Лживый","Жадный","Щедрый","Хитрый","Простодушный","Мрачный","Весёлый","Терпеливый","Вспыльчивый","Преданный","Эгоистичный","Любознательный","Равнодушный","Оптимистичный","Пессимистичный","Сдержанный","Импульсивный","Расчётливый","Мечтательный","Практичный","Надменный","Скромный","Властный","Покорный","Добросердечный","Злопамятный","Великодушный","Циничный","Наивный","Безрассудный","Осторожный","Фанатичный","Скептичный"];
+
+    function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function weightedRandom(items, weights) {
+        let sum = 0, cumulative = [];
+        for (let i = 0; i < weights.length; i++) { sum += weights[i]; cumulative[i] = sum; }
+        let r = Math.random() * sum;
+        for (let i = 0; i < cumulative.length; i++) { if (r < cumulative[i]) return items[i]; }
+        return items[items.length - 1];
+    }
+    function generateFullName(raceKey) {
+        let raceData = names[raceKey] || names.other;
+        if (!raceData.male && !raceData.female) {
+            return getRandomItem(raceData.first) + " " + getRandomItem(raceData.last);
+        }
+        let gender = Math.random() < 0.5 ? 'male' : 'female';
+        return getRandomItem(raceData[gender]) + " " + getRandomItem(raceData.surnames || raceData.last || ["Безымянный"]);
+    }
+
+    window.generateCharacter = function() {
+        const card = document.getElementById('characterCard');
+        card.classList.remove('visible');
+        setTimeout(() => {
+            let region = getRandomItem(regions);
+            let weights = raceWeights[region];
+            let chosenRaceKey = weightedRandom(raceKeys, weights);
+            let raceName = raceList[raceKeys.indexOf(chosenRaceKey)];
+            let fullName = generateFullName(chosenRaceKey);
+
+            let magicWeights = [...baseMagicWeights];
+            if (region === "Столица Альдемар") { magicWeights[3] += 20; magicWeights[2] += 10; magicWeights[4] -= 5; }
+            else if (region === "Имперская Дуга") { magicWeights[2] += 10; magicWeights[3] -= 2; }
+            else if (region === "Мировые просторы") { magicWeights[2] += 10; magicWeights[4] += 10; magicWeights[3] -= 3; }
+            else if (region === "Драконий Хребет") { magicWeights[4] += 15; magicWeights[1] -= 5; magicWeights[3] -= 3; }
+            else if (region === "Пустоши Вейлара") { magicWeights[4] += 15; magicWeights[0] += 5; magicWeights[3] -= 3; }
+            if (chosenRaceKey === "orc") { magicWeights[1] -= 15; magicWeights[2] -= 10; magicWeights[3] -= 5; }
+            if (chosenRaceKey === "fey") { magicWeights[2] -= 3; magicWeights[3] -= 5; magicWeights[1] += 10; }
+            if (chosenRaceKey === "dwarf") { magicWeights[2] -= 3; magicWeights[3] -= 5; magicWeights[1] += 5; }
+            if (chosenRaceKey === "elf") { magicWeights[4] -= 5; magicWeights[2] += 5; }
+            magicWeights = magicWeights.map(w => w < 0 ? 0 : w);
+            let magicType = weightedRandom(magicTypes, magicWeights);
+
+            let affWeights = [...baseAffiliationWeights];
+            if (region === "Столица Альдемар" || region === "Имперская Дуга") {
+                affWeights[2] += 10; affWeights[3] += (region==="Столица Альдемар"?15:3);
+                affWeights[4] += (region==="Столица Альдемар"?10:3); affWeights[5] -= 3; affWeights[6] += 5;
+            } else {
+                affWeights[2] = 0; affWeights[3] = 0;
+                if (region === "Драконий Хребет") affWeights[4] = 1;
+                if (region === "Мировые просторы" || region === "Пустоши Вейлара") affWeights[5] += 12;
+                affWeights[6] += 3;
+            }
+            if (chosenRaceKey !== "human") { affWeights[2] = Math.floor(affWeights[2]*0.2); affWeights[4] = 0; }
+            if (chosenRaceKey === "orc") affWeights[6] = Math.floor(affWeights[6]*0.25);
+            if (chosenRaceKey === "fey") affWeights[3] = Math.floor(affWeights[3]*0.3);
+            if (magicType === "Магическая Академия") affWeights[3] += 10;
+            else if (magicType === "Школа магии") affWeights[3] += 3;
+            if (magicType === "Запрещённая") affWeights[5] += 15;
+            affWeights = affWeights.map(w => w < 0 ? 0 : w);
+            let affiliation = weightedRandom(affiliationsList, affWeights);
+
+            let pools = [];
+            if (affiliation === "Наёмник" || (affiliation === "Вольный" && region.includes("Пустоши"))) pools.push("combat");
+            if (magicType === "Магическая Академия" || magicType === "Школа магии" || magicType === "Базовая") pools.push("magic");
+            if (magicType === "Запрещённая" || affiliation === "Культ") pools.push("forbidden");
+            if (affiliation === "Церковь") pools.push("divine");
+            if (affiliation === "Вольный" && (region === "Мировые просторы" || region === "Драконий Хребет")) pools.push("wild");
+            if (affiliation === "Великий дом") pools.push("social");
+            if (affiliation === "Купец") pools.push("trade");
+            if (chosenRaceKey === "dwarf") { pools.push("combat","magic","trade"); }
+            if (chosenRaceKey === "elf") { pools.push("magic","wild"); }
+            if (chosenRaceKey === "orc") { pools.push("combat","wild"); }
+            if (chosenRaceKey === "fey") { pools.push("stealth","magic"); }
+            pools.push("social","stealth");
+            pools = [...new Set(pools)];
+            let skillCount = Math.random() < 0.5 ? 2 : 3;
+            let allPossible = pools.flatMap(p => skillPools[p] || []);
+            let shuffled = allPossible.sort(() => Math.random() - 0.5);
+            let selectedSkills = [...new Set(shuffled)].slice(0, skillCount);
+
+            let trait = getRandomItem(traits);
+            let spawn = getRandomItem(regions);
+
+            document.getElementById('fio').textContent = fullName;
+            document.getElementById('origin').textContent = region;
+            document.getElementById('race').textContent = raceName;
+            document.getElementById('magic').textContent = magicType;
+            document.getElementById('affiliation').textContent = affiliation;
+            document.getElementById('skills').textContent = selectedSkills.join(', ');
+            document.getElementById('character').textContent = trait;
+            document.getElementById('spawnLocation').textContent = spawn;
+
+            card.classList.add('visible');
+        }, 150);
+    };
+    window.onload = () => { generateCharacter(); };
+})();
+
+// ======================== СПРАВОЧНИК ЛИЧНОСТЕЙ ========================
+(function() {
+    const charactersBySection = {
+        empire: {
+            tabs: [
+                {
+                    id: "houses", name: "Четвёрка Домов",
+                    items: [
+                        { icon: "https://i.ibb.co/CKDMvk88/midjourney-toe-bot-image-2026-05-04-10-25-56-1.png", name:"Лорд Ксавьер Валькерион", role:"Глава Дома Валькерион", desc:"Если и есть где-то человек, что способен победить в бою на мечах самого Бога, то его щит давно на стене у Ксавьера. Лорд, который уже в возрасте 45 лет стал главой дома и продолжил его ратные традиции. Пользуется уважением в воинских формированиях, не потерпит магии в бою. Вспыльчивый и амбициозный." },
+                        { icon: "https://i.ibb.co/Q78jGLf9/midjourney-toe-bot-image-2026-05-04-10-27-36-1.png", name:"Леди Селеста Эстервальд", role:"Глава Дома Эстервальд", desc:"Молодая вдова с холодным умом, которая потеряла своего мужа при загадочных обстоятельствах. Сильная умом, с подвешенным языком женщина, мастер переговоров. В одном разговоре она харизматичная простушка, а в другом стальной голос заставляет замолчать младшие Дома." },
+                        { icon: "https://i.ibb.co/xrVQqPf/midjourney-toe-bot-image-2026-05-04-10-30-09-1.png", name:"Орсо Карден", role:"Глава Дома Карден", desc:"Тучный купец, безжалостный в торговле. Хитрый, ядовитый, толстый весельчак, знающий цену деньгам. Заработок не пахнет, не говорит, не просит есть, но лучше, чтобы он был в его кармане. Большинство торговых маршрутов всё же помечены на его карте." },
+                        { icon: "https://i.ibb.co/ym35SntD/IMG-20260505-175230-503.jpg", name:"Тибальт Лирен", role:"Глава Дома Лирен", desc:"Загадочный молодой мужчина, пришедший из Имперской Дуги. Он быстро завоевал лидирующие позиции в доме, благодаря необычайно тонким связям с Имперской элитой. Некоторые из этих связей уже давно гниют в канализации Нижних уровней." }
+                    ]
+                },
+                {
+                    id: "council", name: "Совет",
+                    items: [
+                        { icon: "https://i.ibb.co/prJj3bfJ/midjourney-toe-bot-image-2026-05-04-10-55-36.png", name:"Элид Вейлор", role:"Главный Советник", desc:"Неизвестный парень, с большими амбициями и одним из самых результативных отрядов в истории Империи. Стальные Волки несут свою правду несмотря ни на что. Поговаривают, что именно он совместно с магами Империи сверг предыдущего Советника. Пока ангел у власти — Империя спит спокойно." },
+                        { icon: "https://i.ibb.co/xSt2F5f0/midjourney-toe-bot-image-2026-05-04-10-33-41.png", name:"...", role:"Канцлер Теней", desc:"..." },
+                        { icon: "https://i.ibb.co/1fxfVJb7/midjourney-toe-bot-image-2026-05-04-10-35-24.png", name:"Гелий Феррата", role:"Верховный Инквизитор", desc:"Его имя считается нарицательным, когда говорят об абсолютной жестокости, но при нём уровень преступности продолжает снижаться и по сей день. Его лицо закрыто полупрозрачной маской, но даже через неё можно лицезреть взгляд, который видит все твои поступки." }
+                    ]
+                },
+                {
+                    id: "church", name: "Церковь",
+                    items: [
+                        { icon: "https://i.ibb.co/q3069Djb/midjourney-toe-bot-image-2026-05-04-10-36-47.png", name:"Аурелиан IV", role:"Верховный Понтифик", desc:"Старец, что редко появляется на публике. Особо не разговорчив, на проповедях бывает редко, да и говорят, что он сильно заболел неизвестной болезнью." },
+                        { icon: "https://i.ibb.co/3YkHS03d/IMG-20260505-175235-035.jpg", name:"Кардинал Люций", role:"Глава Синода Пламени", desc:"Политик от лица церкви в возрасте 40 лет, который вполне справляется с обязанностями Понтифика, пока тот в отъезде либо на службе. Возможно, он и станет следующим правителем Церкви." },
+                        { icon: "https://i.ibb.co/qFYzJWJ2/midjourney-toe-bot-image-2026-05-04-10-40-08.png", name:"Кардинал Северин", role:"Хранитель Завета", desc:"Седой, горбатый старик, который очень часто видит видения, о которых любит рассказывать молодым священникам. Окончил Магическую Академию, но решил связать свою жизнь с Церковью." }
+                    ]
+                },
+                {
+                    id: "architects", name: "Гильдия Архитекторов",
+                    items: [
+                        { icon: "https://i.ibb.co/ns1XcQtt/midjourney-toe-bot-image-2026-05-04-11-37-49.png", name:"Магистр Элойза", role:"Магистр Потока", desc:"Девушка, что связала свою жизнь с потоками Альдемара. При жизни была жизнерадостной пройдохой, отличница Академии." },
+                        { icon: "https://i.ibb.co/tMtb3RjZ/midjourney-toe-bot-image-2026-05-04-11-41-53.png", name:"Магистр Адриан", role:"Магистр Стабилизации", desc:"Высокорослый эльф с серебряными прядями до поясницы. Мудрый, расчётливый и не терпящий любого дисбаланса ни в жизни, ни в магии. Заносчивый и порой ворчливый, но при этом закрывал Разломы в Пустошах, не теряя людей." },
+                        { icon: "https://i.ibb.co/hxGqTftN/IMG-20260505-181657.png", name:"Магистр Гроот", role:"Магистр Усмирения", desc:"Орк-полукровка с обожжённой правой рукой. Мускулистая громадина, вспыльчивый и на дух не переваривает любые переговоры. В моменты яростных битв очень часто его мощь на грани с запрещённой магией, из-за чего на него косо поглядывает Инквизиция." },
+                        { icon: "https://i.ibb.co/gF63Kvrm/midjourney-toe-bot-image-2026-05-04-11-45-42.png", name:"Магистр Ириэль Звёздная", role:"Магистр Картографии", desc:"Эльфийка, чьи глаза обладают постоянно меняющейся радужкой. Спокойная и добрая девушка, которая имеет частые провалы в памяти. Её карты всегда точны и ценятся выше золота." },
+                        { icon: "https://i.ibb.co/WNXD2nCS/midjourney-toe-bot-image-2026-05-04-11-49-24.png", name:"Магистр Торан", role:"Магистр Строительства", desc:"Гном, в жилах которого течёт кровь истинного строителя. Обожает архитектуру и различные её ответвления и из-за этого достаточно ветреный. Благодаря ему удалось предотвратить катастрофу с обрушением шахт в Драконьем Хребте." }
+                    ]
+                },
+                {
+                    id: "merchants", name: "Купцы",
+                    items: [
+                        { icon: "https://i.ibb.co/BHdTwk0G/midjourney-toe-bot-image-2026-05-04-11-52-40.png", name:"Альдона Корван", role:"Гильдия Ткачей", desc:"Контролирует обороты ткани на многих территориях внутри Альдемара. С виду непримечательная гномиха, но за словом в карман не лезет." },
+                        { icon: "https://i.ibb.co/FbKhqpVk/midjourney-toe-bot-image-2026-05-04-11-56-30.png", name:"Брам Мореход", role:"Судовладелец", desc:"Флот на реках этого тощего мужичка в забавной шляпе развозит товары почти по всем рекам Имперской Дуги. В шутку его называют самым богатым речным коньком."},
+                        { icon: "https://i.ibb.co/hxtjDcRf/IMG-20260505-175245-033.jpg", name:"Кора Альма", role:"Торговка зельями", desc:"Древние рецепты этой знахарки — находка для путешественника любого разряда. Ходят слухи, что она часто отправляет свои зелья через подпольные рынки Альдемара." }
+                    ]
+                }
+            ]
+        },
+        mordeyn: {
+            tabs: [
+                {
+                    id: "keepers", name: "Хранители",
+                    items: [
+                        { icon: "https://i.ibb.co/G4vpg8Gn/IMG-20260505-175248-635.jpg", name:"Аластар Древний", role:"Верховный Хранитель", desc:"Древний эльф, которого вряд ли видел обычный обыватель из Империи. Его возраст неизвестен, но эльфы почитают его за мудрость и любовь к своему народу." },
+                        { icon: "https://i.ibb.co/zVf4DmMj/IMG-20260505-175256-917.jpg", name:"Тиранда", role:"Хранительница лесов", desc:"Светловласая эльфийка, вечно молодая девушка, которая готова идти на крайние меры, если лесам Мордейна будет угрожать опасность. Фейри стали её верными помощниками и таковыми остаются по сей день." },
+                        { icon: "https://i.ibb.co/DfXZyZZD/IMG-20260505-175252-503.jpg", name:"Келебрим Светлый", role:"Хранитель границ", desc:"Лучший стрелок Южных границ Мордейна с большим боевым опытом, который получил, сражаясь бок о бок с некоторыми из орочьих кланов. Поэтому его белоснежное лицо украшают их ритуальные шрамы." }
+                    ]
+                },
+                {
+                    id: "orc_clans", name: "Кланы Орков",
+                    items: [
+                        { icon: "https://i.ibb.co/wFpjy2Bd/IMG-20260505-175309-559.jpg", name:"Кровавый Клык", role:"Воины Хребта", desc:"Свирепые орки, живущие в холодных горах. Имеют постоянные стычки с местными племенами, отличаются тусклым цветом кожи и более мелкими размерами по сравнению с другими орками." },
+                        { icon: "https://i.ibb.co/WCBLP7W/IMG-20260505-180132-810.jpg", name:"Чёрный Топор", role:"Разбойники Просторов", desc:"Эти разукрашенные цветной глиной отряды патрулируют большие перевалы Пустошей Вейлара. Одни из немногих орков, кто смог оседлать вейларских животных." },
+                        { icon: "https://i.ibb.co/HTXTtw7D/IMG-20260505-180142-856.jpg", name:"Железная Челюсть", role:"Наёмники", desc:"Их кожа обладает кровавым оттенком, они служат Империи, эльфам, лордам Простор. Их ремесло — заработок войной, поэтому эти орки существенно лучше общаются с другими расами." },
+                        { icon: "https://i.ibb.co/602QXc5L/IMG-20260505-180150-974.jpg", name:"Пламя Войны", role:"Шаманы Пустошей", desc:"В основе своей это шаманы из разных кланов, которые ведут кочевой образ жизни и проповедуют единство с древними духами. Их магия непредсказуема и редко поддаётся логике со стороны Магических Академий." }
+                    ]
+                },
+                {
+                    id: "dwarf_clans", name: "Кланы Гномов",
+                    items: [
+                        { icon: "https://i.ibb.co/MDhPPpx6/0082c9de6ee8cac5c084e980d4480a4f.jpg", name:"Клан Каменного Молота", role:"Шахтёры", desc:"Контролируют большие месторождения обсидиана и этим самым зарабатывают себе на жизнь. В их кузнях появляются артефакты, которые могут отличаться от тех, что описаны в книгах." },
+                        { icon: "https://i.ibb.co/LdH2v9Rw/IMG-20260505-180216-007.jpg", name:"Клан Железного Сапога", role:"Оружейники", desc:"Клан, который не нуждается в представлении. Почти во всех крупных городах есть кузня с сапогом на вывеске, в которой трудится не покладая рук коренастый гном." },
+                        { icon: "https://i.ibb.co/27Psy7Fh/IMG-20260505-180201-081.jpg", name:"Клан Золотой Бороды", role:"Ювелиры", desc:"Клан специализируется на добыче драгоценных камней. В основе своей это достаточно богатые и самодостаточные гномы, но большинство денег в основном уходит на оборону шахт от посягательств со стороны." }
+                    ]
+                }
+            ]
+        }
+    };
+
+    const grid = document.getElementById('cardGrid');
+    const tabBar = document.getElementById('tabBar');
+    const sectionTabBar = document.getElementById('sectionTabBar');
+    const modalOverlay = document.getElementById('modalOverlay');
+    let currentSection = 'empire', currentTab = 'houses';
+
+    function renderTabs(section) {
+        tabBar.innerHTML = '';
+        charactersBySection[section].tabs.forEach(t => {
+            const btn = document.createElement('div');
+            btn.className = 'tab' + (t.id === currentTab ? ' active' : '');
+            btn.textContent = t.name;
+            btn.onclick = () => { currentTab = t.id; renderTabs(section); renderCards(); };
+            tabBar.appendChild(btn);
+        });
+    }
+
+    function renderCards() {
+        const tab = charactersBySection[currentSection].tabs.find(t => t.id === currentTab);
+        if (!tab) return;
+        grid.innerHTML = tab.items.map(c => {
+            const isDirectLink = c.icon && (c.icon.startsWith('http') || c.icon.startsWith('https'));
+            return `
+                <div class="ref-card" data-name="${c.name}" data-role="${c.role}" data-desc="${c.desc}" data-icon="${c.icon}">
+                    <div class="portrait">
+                        ${isDirectLink
+                            ? '<img src="' + c.icon + '" alt="" loading="lazy" width="60" height="60">'
+                            : '<span>' + c.name.charAt(0) + '</span>'}
+                    </div>
+                    <div class="ref-name">${c.name}</div>
+                    <div class="ref-role">${c.role}</div>
+                </div>
+            `;
+        }).join('');
+        document.querySelectorAll('.ref-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const d = card.dataset;
+                const modalPortrait = document.getElementById('modalPortrait');
+                if (d.icon && d.icon.startsWith('http')) {
+                    modalPortrait.innerHTML = '<img src="' + d.icon + '" alt="" loading="lazy" width="90" height="90">';
+                } else {
+                    modalPortrait.innerHTML = '<span>' + d.name.charAt(0) + '</span>';
+                }
+                document.getElementById('modalName').textContent = d.name;
+                document.getElementById('modalRole').textContent = d.role;
+                document.getElementById('modalDescription').textContent = d.desc;
+                modalOverlay.classList.add('open');
+            });
+        });
+    }
+
+    sectionTabBar.addEventListener('click', (e) => {
+        if (e.target.classList.contains('section-tab')) {
+            document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            currentSection = e.target.dataset.section;
+            currentTab = charactersBySection[currentSection].tabs[0].id;
+            renderTabs(currentSection);
+            renderCards();
+        }
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => modalOverlay.classList.remove('open'));
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+    renderTabs(currentSection);
+    renderCards();
+})();
+
+// Задания (в стиле Тарантино)
+(function() {
+    const questsByRegion = {
+        aldemar: [
+            { title: "Пропавший архивариус", desc: "Значит так: из Башни Тысячи Ступеней исчез архивариус. Просто взял и растворился в воздухе, как слеза под дождём. Говорят, унёс с собой том «Искры и Тени». Ты должен найти его раньше, чем Инквизиция пронюхает и устроит тут свой кукольный театр с пытками. Время пошло, герой.", reward: "100 золотых + редкое заклинание", location: "Сад рядом с Башней тысячи ступеней" },
+            { title: "Крысы в катакомбах", desc: "В нижних тоннелях завелась какая-то дрянь, жрёт наше зерно. Я не знаю, крысы это или порождения тьмы, но урон они наносят реальный. Спустись туда, наведи шороху и скажи им, что Нора Карден передаёт привет. Если выживешь — получишь своё.", reward: "50 золотых + благословение", location: "Амбары Карденов" },
+            { title: "Тени в библиотеке", desc: "Ночью в Имперской библиотеке слышен шёпот, а книги меняются местами, будто играют в свои игры. Библиотекарь уже на грани нервного срыва. Иди туда и выясни, что это за духи, пока я не вызвал сюда Инквизицию и они не сожгли всё к чёртовой матери.", reward: "80 золотых + редкий фолиант", location: "Проход на Верхний Уровень" }
+        ],
+        duga: [
+            { title: "Урожай гнили", desc: "Фермеры говорят, пшеница покрылась чёрной плесенью. Прямо как в страшной сказке. Местные бубнят про порчу. Ты должен найти алхимика или мага, который выяснит, что это за хрень, иначе следующей весной мы все будем жрать камни.", reward: "80 золотых + редкий ингредиент", location: "Паникующий фермер рядом с Брайвеном" },
+            { title: "Пропавший обоз", desc: "Караван с припасами для столицы не прибыл. А в тех повозках, на минуточку, товары на сто золотых. Если ты найдёшь его, то получишь не только мои деньги, но и уважение. Возможно, даже то, что осталось от тех, кто его тронул.", reward: "120 золотых + доверие купцов", location: "Переход на Драконий Хребет" },
+            { title: "Засуха в Брайвене", desc: "Колодцы пересохли. Община просит помощи. Я бы конечно послал кого-то другого, но ты выглядишь как парень, которому нечего терять. Так что бери лопату и иди копай, пока я не передумал.", reward: "60 золотых + амулет воды", location: "Брайвен" }
+        ],
+        hrebet: [
+            { title: "Драконий рёв", desc: "В пещерах опять этот чёртов гул. Старейшины трясутся и хотят отправить разведчиков. Если ты не боишься, что дракон выдохнет тебе в лицо, то вперёд. Обещаю, ты будешь первым, кому я поставлю выпивку, если вернёшься.", reward: "150 золотых + кровавый обсидиан", location: "Скребен" },
+            { title: "Кровная вражда", desc: "Два клана Ай’шадин вцепились друг другу в глотки. Кому-то надо их разнять, пока они не перебили друг друга. Ты, конечно, не дипломат, но у тебя есть одно преимущество: ты — свежее мясо. Может, они убьют тебя, а не друг друга?", reward: "200 золотых + артефакт", location: "Окрестности Тор-Малгрин" },
+            { title: "Пропавшая экспедиция", desc: "Группа картографов ушла в глубь Хребта и пропала. Они знали карты, но, видимо, не знали, как выживать. Найди их и приведи обратно, или хотя бы принеси их записи. Желательно, чтобы они ещё дышали.", reward: "130 золотых + карта пещер", location: "Хижина у Шахт Антимагрума" }
+        ],
+        prostory: [
+            { title: "Спиральное дерево", desc: "В лесу выросло какое-то дерево-портал. Прямо портал в неизвестность. Местные в ужасе. Ты должен пойти и изучить его, пока оно не открылось и не выпустило какую-нибудь тварь.", reward: "100 золотых + карта аномалии", location: "Окраины Мерредиана" },
+            { title: "Эхо-змеи", desc: "В руинах завелись эхо-змеи — твари, которые охотятся, ориентируясь на звук. Настоящие мастера скрытности. Местные просят помощи. Придётся ходить тихо, как ниндзя, или можешь просто громко крикнуть и устроить им вечеринку.", reward: "80 золотых + редкое масло", location: "Лискарн" },
+            { title: "Торговый спор", desc: "Купцы из Просторов и Империи сцепились из-за прав на редкий товар. Крики, угрозы, всё как в дешёвом баре. Найди компромисс, или выбери сторону. Только потом не жалуйся, если кто-то из них натравит на тебя головорезов.", reward: "110 золотых + редкий артефакт", location: "Лискарн" }
+        ],
+        wasteland: [
+            { title: "Мерцающий надлом", desc: "Возле Тар-Моррина открылся разлом. Прямо портал в ад. Нужны смельчаки, чтобы сдержать тварей, пока маги не заделают эту дыру. Это не прогулка по парку, так что бери ствол побольше.", reward: "200 золотых + чёрный гелиолит", location: "Тор-Моррин" },
+            { title: "Дети Ветра", desc: "Кочевники украли припасы из форта. Просто пришли и взяли, как в старые добрые времена. Ты должен вернуть наше добро. Можешь поймать их или договориться — мне плевать, главное, чтобы еда снова была в кладовой.", reward: "120 золотых + проводник", location: "Меджис" },
+            { title: "Беглый маг", desc: "Из столицы сбежал преступник с запретной магией. Инквизиция рвёт и мечет. Говорят, он скрывается в Пустошах. Найди его и верни, желательно живым, иначе чёрный гелиолит нам не поможет.", reward: "180 золотых + амулет инквизитора", location: "Склад Имперского Антимагрума" }
+        ]
+    };
+
+    const select = document.getElementById('questRegionSelect');
+    const questList = document.getElementById('questList');
+
+    select.addEventListener('change', () => {
+        const region = select.value;
+        const quests = questsByRegion[region] || [];
+        if (!region) {
+            questList.innerHTML = '<p style="color:#8b7b6b;">Выберите регион, чтобы увидеть задания.</p>';
+            return;
+        }
+        questList.innerHTML = quests.map(q => `
+            <div class="quest-card">
+                <div class="quest-title">${q.title}</div>
+                <div class="quest-desc">${q.desc}</div>
+                <div class="quest-reward">Награда: ${q.reward}</div>
+                <div class="quest-location">Место получения: ${q.location}</div>
+            </div>
+        `).join('');
+    });
+})();
+</script>
+</body>
+</html>
